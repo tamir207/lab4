@@ -114,10 +114,7 @@ void load_into_memory() {
         return;
     }
 
-    size_t bytes_to_read = length * unit_size;
-    size_t bytes_read = fread(mem_buf, 1, bytes_to_read, file);
-
-    mem_count = bytes_read / unit_size;
+    mem_count = fread(mem_buf, unit_size, length, file);
 
     printf("Loaded %zu units into memory\n", mem_count);
 
@@ -183,7 +180,61 @@ void memory_display() {
 }
 
 void save_into_file() {
-    printf("Not implemented yet\n");
+    if (file_name[0] == '\0') {
+        printf("Error: File name is empty.\n");
+        return;
+    }
+
+    FILE *file = fopen(file_name, "r+");
+    if (file == NULL) {
+        printf("Error: Failed to open the file.\n");
+        return;
+    }
+
+    char input[128];
+    unsigned int source_address;
+    int target_location;
+    size_t length;
+
+    printf("Please enter <source_address> <target_location> <length>\n> ");
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        if (sscanf(input, "%x %d %zu", &source_address, &target_location, &length) != 3) {
+            printf("Error: Invalid input.\n");
+            fclose(file);
+            return;
+        }
+    } else {
+        fclose(file);
+        return;
+    }
+
+    if (debug_mode) {
+        fprintf(stderr, "Debug: file_name='%s', source_address=0x%X, target_location=%d, length=%zu\n",
+                file_name, source_address, target_location, length);
+    }
+
+    unsigned char* src_ptr;
+    if (source_address == 0) {
+        src_ptr = mem_buf;
+    } else {
+        src_ptr = (unsigned char*)source_address;
+    }
+
+    if (fseek(file, target_location, SEEK_SET) != 0) {
+        printf("Error: Failed to seek to target location.\n");
+        fclose(file);
+        return;
+    }
+
+    size_t units_written = fwrite(src_ptr, unit_size, length, file);
+
+    if (units_written != length) {
+        printf("Error: Failed to write all units to file.\n");
+    } else {
+        printf("Wrote %zu units into file starting from offset %d\n", length, target_location);
+    }
+
+    fclose(file);
 }
 
 void memory_modify() {
