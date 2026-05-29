@@ -1,0 +1,157 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char debug_mode = 0;
+char file_name[128] = "";
+int unit_size = 1;
+unsigned char mem_buf[10000];
+size_t mem_count = 0;
+char display_mode = 0;
+
+struct fun_desc {
+    char *name;
+    char index;
+    void (*fun)();
+};
+
+void toggle_debug_mode();
+void set_file_name();
+void set_unit_size();
+void load_into_memory();
+void toggle_display_mode();
+void memory_display();
+void save_into_file();
+void memory_modify();
+void quit();
+
+void toggle_debug_mode() {
+    if (debug_mode == 0) {
+        debug_mode = 1;
+        fprintf(stderr, "Debug flag now on\n");
+    } else {
+        debug_mode = 0;
+        fprintf(stderr, "Debug flag now off\n");
+    }
+}
+
+void set_file_name() {
+    printf("Enter file name: ");
+    if (fgets(file_name, sizeof(file_name), stdin) != NULL) {
+        file_name[strcspn(file_name, "\n")] = 0;
+    }
+    if (debug_mode) {
+        fprintf(stderr, "Debug: file name set to '%s'\n", file_name);
+    }
+}
+
+void set_unit_size() {
+    char input[10];
+    int size;
+    printf("Enter unit size - 1, 2, or 4: ");
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        if (sscanf(input, "%d", &size) == 1) {
+            if (size == 1 || size == 2 || size == 4) {
+                unit_size = size;
+                if (debug_mode) {
+                    fprintf(stderr, "Debug: set size to %d\n", unit_size);
+                }
+            } else {
+                printf("Error: Invalid unit size.\n");
+            }
+        } else {
+            printf("Error: Invalid input.\n");
+        }
+    }
+}
+
+void quit() {
+    if (debug_mode) {
+        fprintf(stderr, "quitting\n");
+    }
+    exit(0);
+}
+
+void load_into_memory() {
+    printf("Not implemented yet\n");
+}
+
+void toggle_display_mode() {
+    if (display_mode == 0) {
+        display_mode = 1;
+        printf("Decimal display flag now on, decimal representation\n");
+    } else {
+        display_mode = 0;
+        printf("Decimal display flag now off, hexadecimal representation\n");
+    }
+}
+
+void memory_display() {
+    printf("Not implemented yet\n");
+}
+
+void save_into_file() {
+    printf("Not implemented yet\n");
+}
+
+void memory_modify() {
+    printf("Not implemented yet\n");
+}
+
+int main(int argc, char **argv) {
+    struct fun_desc menu[] = {
+        {"Toggle <D>ebug Mode", 'D', toggle_debug_mode},
+        {"Set <F>ile Name", 'F', set_file_name},
+        {"Set <U>nit Size", 'U', set_unit_size},
+        {"<L>oad Into Memory", 'L', load_into_memory},
+        {"<T>oggle Display Mode", 'T', toggle_display_mode},
+        {"<M>emory Display", 'M', memory_display},
+        {"<S>ave Into File", 'S', save_into_file},
+        {"Memory Modif<y>", 'y', memory_modify},
+        {"<Q>uit", 'Q', quit},
+        {NULL, 0, NULL}
+    };
+
+    char buffer[1024];
+    int i;
+
+    while (1) {
+        if (debug_mode) {
+            fprintf(stderr, "unit_size: %d, file_name: %s, mem_count: %zu\n", 
+                    unit_size, file_name, mem_count);
+        }
+
+        printf("Choose a operation:\n");
+        i = 0;
+        while (menu[i].name != NULL) {
+            printf("%s\n", menu[i].name);
+            i++;
+        }
+        printf("> ");
+
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            break;
+        }
+
+        char choice = buffer[0];
+        int choice_index = -1;
+
+        i = 0;
+        while (menu[i].name != NULL) {
+            if (choice == menu[i].index) {
+                choice_index = i;
+                break;
+            }
+            i++;
+        }
+
+        if (choice_index == -1) {
+            printf("Operation not supported.\n\n");
+        } else {
+            menu[choice_index].fun();
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
