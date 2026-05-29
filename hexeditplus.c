@@ -135,13 +135,51 @@ void toggle_display_mode() {
 }
 
 void memory_display() {
-    int val = 0x1234;
-    
-    printf("Hexadecimal representation:\n");
-    printf(hex_formats[unit_size - 1], val);
-    
-    printf("Decimal representation:\n");
-    printf(dec_formats[unit_size - 1], val);
+    char input[128];
+    unsigned int addr;
+    size_t u;
+
+    printf("Enter address and length\n> ");
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        if (sscanf(input, "%x %zu", &addr, &u) != 2) {
+            printf("Error: Invalid input.\n");
+            return;
+        }
+    } else {
+        return;
+    }
+
+    unsigned char* ptr;
+    if (addr == 0) {
+        ptr = mem_buf;
+    } else {
+        ptr = (unsigned char*)addr;
+    }
+
+    if (display_mode == 0) {
+        printf("Hexadecimal\n===========\n");
+    } else {
+        printf("Decimal\n=======\n");
+    }
+
+    for (size_t i = 0; i < u; i++) {
+        void* current_unit = ptr + (i * unit_size);
+        unsigned int value = 0;
+
+        if (unit_size == 1) {
+            value = *(unsigned char*)current_unit;
+        } else if (unit_size == 2) {
+            value = *(unsigned short*)current_unit;
+        } else if (unit_size == 4) {
+            value = *(unsigned int*)current_unit;
+        }
+
+        if (display_mode == 0) {
+            printf(hex_formats[unit_size - 1], value);
+        } else {
+            printf(dec_formats[unit_size - 1], value);
+        }
+    }
 }
 
 void save_into_file() {
