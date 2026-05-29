@@ -9,6 +9,9 @@ unsigned char mem_buf[10000];
 size_t mem_count = 0;
 char display_mode = 0;
 
+static char* hex_formats[] = {"%#hhx\n", "%#hx\n", "No such unit", "%#x\n"};
+static char* dec_formats[] = {"%#hhd\n", "%#hd\n", "No such unit", "%#d\n"};
+
 struct fun_desc {
     char *name;
     char index;
@@ -73,7 +76,52 @@ void quit() {
 }
 
 void load_into_memory() {
-    printf("Not implemented yet\n");
+    if (file_name[0] == '\0') {
+        printf("Error: File name is empty.\n");
+        return;
+    }
+
+    FILE *file = fopen(file_name, "rb");
+    if (file == NULL) {
+        printf("Error: Failed to open the file.\n");
+        return;
+    }
+
+    char input[128];
+    int location;
+    size_t length;
+
+    printf("Please enter <location> <length>: ");
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        if (sscanf(input, "%x %zu", &location, &length) != 2) {
+            printf("Error: Invalid input.\n");
+            fclose(file);
+            return;
+        }
+    } else {
+        fclose(file);
+        return;
+    }
+
+    if (debug_mode) {
+        fprintf(stderr, "Debug: file_name='%s', location=0x%X, length=%zu\n", 
+                file_name, location, length);
+    }
+
+    if (fseek(file, location, SEEK_SET) != 0) {
+        printf("Error: Failed to seek to location 0x%X.\n", location);
+        fclose(file);
+        return;
+    }
+
+    size_t bytes_to_read = length * unit_size;
+    size_t bytes_read = fread(mem_buf, 1, bytes_to_read, file);
+
+    mem_count = bytes_read / unit_size;
+
+    printf("Loaded %zu units into memory\n", mem_count);
+
+    fclose(file);
 }
 
 void toggle_display_mode() {
@@ -87,7 +135,13 @@ void toggle_display_mode() {
 }
 
 void memory_display() {
-    printf("Not implemented yet\n");
+    int val = 0x1234;
+    
+    printf("Hexadecimal representation:\n");
+    printf(hex_formats[unit_size - 1], val);
+    
+    printf("Decimal representation:\n");
+    printf(dec_formats[unit_size - 1], val);
 }
 
 void save_into_file() {
@@ -117,11 +171,11 @@ int main(int argc, char **argv) {
 
     while (1) {
         if (debug_mode) {
-            fprintf(stderr, "unit_size: %d, file_name: %s, mem_count: %zu\n", 
+            fprintf(stderr, "unit_size: %d, file_name: '%s', mem_count: %zu\n", 
                     unit_size, file_name, mem_count);
         }
 
-        printf("Choose a operation:\n");
+        printf("Choose operation:\n");
         i = 0;
         while (menu[i].name != NULL) {
             printf("%s\n", menu[i].name);
