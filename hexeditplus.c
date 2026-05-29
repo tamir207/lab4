@@ -276,7 +276,34 @@ void save_into_file() {
 }
 
 void memory_modify() {
-    printf("Not implemented yet\n");
+    char input[128];
+    int location_signed;
+    unsigned int val;
+
+    printf("Please enter <location> <val>\n> ");
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        if (sscanf(input, "%x %x", &location_signed, &val) == 2) {
+            
+            if (debug_mode) {
+                fprintf(stderr, "Debug: location=0x%X, val=0x%X\n", (unsigned int)location_signed, val);
+            }
+
+            if (location_signed >= 0 && (location_signed + unit_size <= 10000)) {
+                unsigned char *ptr = mem_buf + (unsigned int)location_signed;
+                if (unit_size == 1) {
+                    *(unsigned char*)ptr = (unsigned char)val;
+                } else if (unit_size == 2) {
+                    *(unsigned short*)ptr = (unsigned short)val;
+                } else if (unit_size == 4) {
+                    *(unsigned int*)ptr = (unsigned int)val;
+                }
+            } else {
+                printf("Error: Memory access out of bounds.\n");
+            }
+        } else {
+            printf("Error: Invalid input.\n");
+        }
+    }
 }
 
 int main(int argc, char **argv) {
