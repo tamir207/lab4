@@ -87,6 +87,18 @@ void load_into_memory() {
         return;
     }
 
+    if (fseek(file, 0, SEEK_END) != 0) {
+        printf("Error: Failed to seek to end.\n");
+        fclose(file);
+        return;
+    }
+    long file_size = ftell(file);
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        printf("Error: Failed to seek to start.\n");
+        fclose(file);
+        return;
+    }
+
     char input[128];
     int location;
     size_t length;
@@ -108,6 +120,13 @@ void load_into_memory() {
                 file_name, location, length);
     }
 
+    size_t bytes_to_read = length * unit_size;
+    if (location < 0 || location > file_size || (location + bytes_to_read) > (size_t)file_size) {
+        printf("Error: Requested location or length exceeds file size (%ld bytes).\n", file_size);
+        fclose(file);
+        return;
+    }
+
     if (fseek(file, location, SEEK_SET) != 0) {
         printf("Error: Failed to seek to location 0x%X.\n", location);
         fclose(file);
@@ -115,7 +134,7 @@ void load_into_memory() {
     }
 
     mem_count = fread(mem_buf, unit_size, length, file);
-
+    
     printf("Loaded %zu units into memory\n", mem_count);
 
     fclose(file);
@@ -191,6 +210,18 @@ void save_into_file() {
         return;
     }
 
+    if (fseek(file, 0, SEEK_END) != 0) {
+        printf("Error: Failed to seek to end.\n");
+        fclose(file);
+        return;
+    }
+    long file_size = ftell(file);
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        printf("Error: Failed to seek to start.\n");
+        fclose(file);
+        return;
+    }
+
     char input[128];
     unsigned int source_address;
     int target_location;
@@ -211,6 +242,13 @@ void save_into_file() {
     if (debug_mode) {
         fprintf(stderr, "Debug: file_name='%s', source_address=0x%X, target_location=%d, length=%zu\n",
                 file_name, source_address, target_location, length);
+    }
+
+    size_t bytes_to_write = length * unit_size;
+    if (target_location < 0 || target_location > file_size || (target_location + bytes_to_write) > (size_t)file_size) {
+        printf("Error: Target location or length exceeds file size (%ld bytes).\n", file_size);
+        fclose(file);
+        return;
     }
 
     unsigned char* src_ptr;
