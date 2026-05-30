@@ -229,7 +229,7 @@ void save_into_file() {
 
     printf("Please enter <source_address> <target_location> <length>\n> ");
     if (fgets(input, sizeof(input), stdin) != NULL) {
-        if (sscanf(input, "%x %d %zu", &source_address, &target_location, &length) != 3) {
+        if (sscanf(input, "%x %x %zu", &source_address, &target_location, &length) != 3) {
             printf("Error: Invalid input.\n");
             fclose(file);
             return;
